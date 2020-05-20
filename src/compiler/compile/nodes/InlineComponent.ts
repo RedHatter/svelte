@@ -5,6 +5,7 @@ import Binding from './Binding';
 import EventHandler from './EventHandler';
 import Expression from './shared/Expression';
 import Component from '../Component';
+import Element from './Element';
 import Let from './Let';
 import TemplateScope from './shared/TemplateScope';
 import { INode } from './interfaces';
@@ -19,6 +20,7 @@ export default class InlineComponent extends Node {
 	lets: Let[] = [];
 	children: INode[];
 	scope: TemplateScope;
+	styleScope: Element;
 
 	constructor(component: Component, parent, scope, info) {
 		super(component, parent, scope, info);
@@ -112,5 +114,30 @@ export default class InlineComponent extends Node {
 		});
 
 		this.children = map_children(component, this, this.scope, info.children);
+
+		component.stylesheet.apply(this);
+	}
+
+	add_css_class () {
+		this.styleScope = new Element(this.component, this.parent, this.scope, {
+			start: this.start,
+			end: this.end,
+			type: 'Element',
+			name: 'div',
+			attributes: [],
+			children: [],
+		});
+		this.styleScope.attributes.push(
+			new Attribute(this.component, this, this.scope, {
+				type: 'Attribute',
+				name: 'class',
+				value: [{ type: 'Text', data: this.component.stylesheet.id, synthetic: true }]
+			}),
+			new Attribute(this.component, this, this.scope, {
+				type: 'Attribute',
+				name: 'style',
+				value: [{ type: 'Text', data: 'display: contents;', synthetic: true }]
+			})
+		)
 	}
 }

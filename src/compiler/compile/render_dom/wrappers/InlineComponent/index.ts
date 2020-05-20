@@ -3,6 +3,7 @@ import Renderer from '../../Renderer';
 import Block from '../../Block';
 import InlineComponent from '../../../nodes/InlineComponent';
 import FragmentWrapper from '../Fragment';
+import ElementWrapper from '../Element/index';
 import { sanitize } from '../../../../utils/names';
 import add_to_set from '../../../utils/add_to_set';
 import { b, x, p } from 'code-red';
@@ -23,6 +24,7 @@ export default class InlineComponentWrapper extends Wrapper {
 	slots: Map<string, { block: Block; scope: TemplateScope; get_context?: Node; get_changes?: Node }> = new Map();
 	node: InlineComponent;
 	fragment: FragmentWrapper;
+	styleScope: ElementWrapper;
 
 	constructor(
 		renderer: Renderer,
@@ -33,6 +35,10 @@ export default class InlineComponentWrapper extends Wrapper {
 		next_sibling: Wrapper
 	) {
 		super(renderer, block, parent, node);
+
+		if (this.node.styleScope) {
+			this.styleScope = new ElementWrapper(renderer, block, parent, this.node.styleScope, strip_whitespace, undefined);
+		}
 
 		this.cannot_use_innerhtml();
 		this.not_static_content();
@@ -127,6 +133,11 @@ export default class InlineComponentWrapper extends Wrapper {
 		parent_nodes: Identifier
 	) {
 		this.warn_if_reactive();
+
+		if (this.styleScope) {
+			this.styleScope.render(block, parent_node, parent_nodes);
+			parent_node = this.styleScope.var;
+		}
 
 		const { renderer } = this;
 		const { component } = renderer;

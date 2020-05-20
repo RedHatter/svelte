@@ -1,10 +1,9 @@
 import MagicString from 'magic-string';
 import { walk } from 'estree-walker';
 import Selector from './Selector';
-import Element from '../nodes/Element';
 import { Ast, TemplateNode } from '../../interfaces';
 import Component from '../Component';
-import { CssNode } from './interfaces';
+import { CssNode, Tag } from './interfaces';
 import hash from "../utils/hash";
 
 function remove_css_prefix(name: string): string {
@@ -51,7 +50,7 @@ class Rule {
 		this.declarations = node.block.children.map((node: CssNode) => new Declaration(node));
 	}
 
-	apply(node: Element, stack: Element[]) {
+	apply(node: Tag, stack: Tag[]) {
 		this.selectors.forEach(selector => selector.apply(node, stack)); // TODO move the logic in here?
 	}
 
@@ -162,7 +161,7 @@ class Atrule {
 		this.declarations = [];
 	}
 
-	apply(node: Element, stack: Element[]) {
+	apply(node: Tag, stack: Tag[]) {
 		if (this.node.name === 'media' || this.node.name === 'supports') {
 			this.children.forEach(child => {
 				child.apply(node, stack);
@@ -361,13 +360,14 @@ export default class Stylesheet {
 		}
 	}
 
-	apply(node: Element) {
+	apply(node: Tag) {
 		if (!this.has_styles) return;
 
-		const stack: Element[] = [];
+		const stack: Tag[] = [];
 		let parent: TemplateNode = node;
 		while (parent = parent.parent) {
-			if (parent.type === 'Element') stack.unshift(parent as Element);
+			if (parent.type === 'Element' || parent.type === 'InlineComponent')
+				stack.unshift(parent as Tag);
 		}
 
 		for (let i = 0; i < this.children.length; i += 1) {
@@ -377,7 +377,7 @@ export default class Stylesheet {
 	}
 
 	reify() {
-		this.nodes_with_css_class.forEach((node: Element) => {
+		this.nodes_with_css_class.forEach((node: Tag) => {
 			node.add_css_class();
 		});
 	}

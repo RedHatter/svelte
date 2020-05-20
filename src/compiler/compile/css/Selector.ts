@@ -1,9 +1,8 @@
 import MagicString from 'magic-string';
 import Stylesheet from './Stylesheet';
 import { gather_possible_values, UNKNOWN } from './gather_possible_values';
-import { CssNode } from './interfaces';
+import { CssNode, Tag } from './interfaces';
 import Component from '../Component';
-import Element from '../nodes/Element';
 
 enum BlockAppliesToNode {
 	NotPossible,
@@ -35,7 +34,7 @@ export default class Selector {
 		this.used = this.local_blocks.length === 0;
 	}
 
-	apply(node: Element, stack: Element[]) {
+	apply(node: Tag, stack: Tag[]) {
 		const to_encapsulate: any[] = [];
 
 		apply_selector(this.local_blocks.slice(), node, stack.slice(), to_encapsulate);
@@ -147,7 +146,7 @@ export default class Selector {
 	}
 }
 
-function apply_selector(blocks: Block[], node: Element, stack: Element[], to_encapsulate: any[]): boolean {
+function apply_selector(blocks: Block[], node: Tag, stack: Tag[], to_encapsulate: any[]): boolean {
 	const block = blocks.pop();
 	if (!block) return false;
 
